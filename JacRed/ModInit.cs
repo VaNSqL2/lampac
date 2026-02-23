@@ -1,6 +1,13 @@
 ﻿using JacRed.Models.AppConf;
 using Newtonsoft.Json;
+using Shared;
+using Shared.Engine;
+using Shared.Models.AppConf;
+using Shared.Models.Module;
+using System;
+using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Jackett
 {
@@ -46,6 +53,29 @@ namespace Jackett
         {
             Directory.CreateDirectory("cache/jacred");
             File.WriteAllText("module/JacRed.current.conf", JsonConvert.SerializeObject(conf, Formatting.Indented));
+
+            var currentConf = conf ?? new ModInit();
+
+            if (AppInit.conf?.WAF?.limit_map != null && currentConf.WafLimit != null)
+            {
+                const string apiPattern = "^/api/(v1.0|v2.0)/";
+
+                if (!AppInit.conf.WAF.limit_map.ContainsKey(apiPattern))
+                {
+                    var updated = new Dictionary<string, WafLimitMap>
+                    {
+                        [apiPattern] = currentConf.WafLimit
+                    };
+
+                    foreach (var item in AppInit.conf.WAF.limit_map)
+                        updated[item.Key] = item.Value;
+
+                    AppInit.conf.WAF.limit_map = updated;
+                }
+            }
+
+            AppInit.AddBaseModValidQueryValueWhiteList("query");
+            AppInit.AddBaseModValidQueryValueWhiteList("genres");
 
             ThreadPool.QueueUserWorkItem(async _ => await SyncCron.Run());
             ThreadPool.QueueUserWorkItem(async _ => await FileDB.Cron());
@@ -108,6 +138,8 @@ namespace Jackett
         public string filter { get; set; }
 
         public string filter_ignore { get; set; }
+
+        public WafLimitMap WafLimit { get; set; } = new WafLimitMap() { limit = 10, second = 1 };
 
 
         public RedConf Red = new RedConf();

@@ -37,6 +37,10 @@ namespace Shared
 
         public static readonly HashSet<string> BaseModPathWhiteList = new(StringComparer.OrdinalIgnoreCase);
 
+        static readonly object baseModValidQueryValueWhiteListLock = new object();
+
+        public static readonly HashSet<string> BaseModValidQueryValueWhiteList = new(StringComparer.OrdinalIgnoreCase);
+
         public static void AddBaseModPathWhiteList(string path)
         {
             if (string.IsNullOrWhiteSpace(path))
@@ -71,6 +75,30 @@ namespace Shared
             }
 
             return false;
+        }
+
+        public static void AddBaseModValidQueryValueWhiteList(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return;
+
+            name = name.Trim();
+
+            lock (baseModValidQueryValueWhiteListLock)
+            {
+                BaseModValidQueryValueWhiteList.Add(name);
+            }
+        }
+
+        public static bool IsBaseModValidQueryValueWhitelisted(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name) || BaseModValidQueryValueWhiteList.Count == 0)
+                return false;
+
+            lock (baseModValidQueryValueWhiteListLock)
+            {
+                return BaseModValidQueryValueWhiteList.Contains(name);
+            }
         }
 
         static AppInit()

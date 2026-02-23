@@ -129,6 +129,9 @@ namespace Lampac.Engine.Middlewares
             if (string.IsNullOrEmpty(value))
                 return string.Empty;
 
+            if (AppInit.IsBaseModValidQueryValueWhitelisted(name))
+                return value;
+
             sb.Clear();
 
             foreach (char ch in value)
