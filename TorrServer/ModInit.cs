@@ -3,9 +3,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Shared;
 using Shared.Engine;
+using Shared.Models.AppConf;
 using Shared.Models.Module;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -52,6 +55,8 @@ namespace TorrServer
         public string multiaccess { get; set; } = "auth";
 
         public bool checkfile { get; set; } = true;
+
+        public WafLimitMap WafLimit { get; set; } = new WafLimitMap() { limit = 50, second = 1 };
 
 
         static (ModInit, DateTime) cacheconf = default;
@@ -101,6 +106,30 @@ namespace TorrServer
         public static void loaded(InitspaceModel initspace)
         {
             RegisterShutdown(initspace);
+
+            cron_UpdateSettings(null);
+
+            var currentConf = conf ?? new ModInit();
+
+            AppInit.AddBaseModPathWhiteList("/ts/");
+
+            if (AppInit.conf?.WAF?.limit_map != null && currentConf.WafLimit != null)
+            {
+                const string tsPattern = "^/ts/";
+
+                if (!AppInit.conf.WAF.limit_map.ContainsKey(tsPattern))
+                {
+                    var updated = new Dictionary<string, WafLimitMap>
+                    {
+                        [tsPattern] = currentConf.WafLimit
+                    };
+
+                    foreach (var item in AppInit.conf.WAF.limit_map)
+                        updated[item.Key] = item.Value;
+
+                    AppInit.conf.WAF.limit_map = updated;
+                }
+            }
 
             _cronTimer = new Timer(cron_UpdateSettings, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
 

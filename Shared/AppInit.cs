@@ -33,6 +33,46 @@ namespace Shared
 
         static FileSystemWatcher fileWatcher;
 
+        static readonly object baseModPathWhiteListLock = new object();
+
+        public static readonly HashSet<string> BaseModPathWhiteList = new(StringComparer.OrdinalIgnoreCase);
+
+        public static void AddBaseModPathWhiteList(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+
+            path = path.Trim().Replace('\\', '/');
+
+            if (!path.StartsWith('/'))
+                path = "/" + path;
+
+            if (!path.EndsWith('/'))
+                path += "/";
+
+            lock (baseModPathWhiteListLock)
+            {
+                BaseModPathWhiteList.Add(path);
+            }
+        }
+
+        public static bool IsBaseModPathWhitelisted(ReadOnlySpan<char> path)
+        {
+            if (path.IsEmpty || BaseModPathWhiteList.Count == 0)
+                return false;
+
+            lock (baseModPathWhiteListLock)
+            {
+                foreach (var prefix in BaseModPathWhiteList)
+                {
+                    if (!string.IsNullOrEmpty(prefix) && path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         static AppInit()
         {
             updateConf();

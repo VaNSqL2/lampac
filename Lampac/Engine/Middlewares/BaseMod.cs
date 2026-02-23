@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Primitives;
+using Shared;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -71,6 +72,9 @@ namespace Lampac.Engine.Middlewares
         {
             if (path.IsEmpty)
                 return false;
+
+            if (AppInit.IsBaseModPathWhitelisted(path))
+                return true;
 
             foreach (char ch in path)
             {
