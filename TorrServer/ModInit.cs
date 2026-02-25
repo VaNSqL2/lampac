@@ -39,7 +39,7 @@ namespace TorrServer
         #endregion
 
         #region ModInit
-        public string releases { get; set; } = "MatriX.135";
+        public string releases { get; set; } = "MatriX.139";
 
         public bool rdb { get; set; }
 
