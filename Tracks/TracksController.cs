@@ -122,7 +122,7 @@ namespace Tracks.Controllers
                     process.StartInfo.ArgumentList.Add("json");
                     process.StartInfo.ArgumentList.Add("-show_format");
                     process.StartInfo.ArgumentList.Add("-show_streams");
-                    process.StartInfo.ArgumentList.Add(AccsDbInvk.Args(uri.AbsoluteUri, httpContext));
+                    process.StartInfo.ArgumentList.Add(AccsDbInvk.Args(uri.AbsoluteUri.Replace("&preload","&play"), httpContext));
 
                     argumentList = process.StartInfo.FileName + " " + string.Join(" ", process.StartInfo.ArgumentList);
 
